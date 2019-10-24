@@ -6,7 +6,7 @@ MamadBot is a social bot that you can add to Telegram groups and have fun with i
 
 # How to use
 
-You can find [the bot chilling here](https://t.me/@MamadHeydariBot). Don't hesisitate to add it to any groups or channels.
+You can find [the bot chilling here](https://t.me/MamadHeydariBot). Don't hesisitate to add it to any groups or channels.
 
 # Contribution
 
