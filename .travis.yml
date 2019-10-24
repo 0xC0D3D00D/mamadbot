@@ -18,19 +18,20 @@ script:
 - dep ensure
 - go build .
 
-after_success: 
+after_success:
 - docker login rg.fr-par.scw.cloud/mamad -u nologin -p $SCW_SECRET_TOKEN
-- docker build -t $DOCKER_IMAGE_NAME .
+- docker build -t $DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_NUMBER .
 - docker push $DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_NUMBER
-- ./kubectl config set-cluster kubernetes --certificate-authority=k8s/build/ca.crt
+- ./kubectl config set-cluster kubernetes --certificate-authority=k8s/build/ca.crt --server=$K8S_SERVER_URL
 - ./kubectl config set-credentials $K8S_SERVICE_ACCOUNT --token=$K8S_SECRET_TOKEN
 - ./kubectl set-context target --cluster=kubernetes --namespace=$K8S_NAMESPACE --user=$K8S_SERVICE_ACCOUNT
 - ./kubectl set image --namespace=$K8S_NAMESPACE deployment/$K8S_DEPLOYMENT $K8S_DEPLOYMENT=$DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_NUMBER
 
 env:
   global:
-    - K8S_NAMESPACE=mamad
-    - K8S_DEPLOYMENT=mamadbot
-    - K8S_SERVICE_ACCOUNT=mamadbot-travis
-    - DOCKER_IMAGE_NAME=rg.fr-par.scw.cloud/mamad/mamadbot
-    - secure: oFQZT1MFPvH7BieK5igQAVKFKs07JKJVcQRq2lze8BYG8WElLtRb+W7OeGyW1Lqo1z8miDd9QmF1kqfPr75EqQ3WmMbPqvoNlPUggMQWzVeD4NTQb/3mLA+lWNsMn13mNUuXsH8ddNNwI2jJRTPLTpFkof+FWd1WYd82gPmI+88HMsgRgGhYfELB42/4GeaZx3Yii2mMtZDs4jleJrWst3pJ188nJzpfa1A9bqCPdeQkrVWnDClotfhuxhS5JQjoX1gy53CXx3g8rtRh0/OphM2qgiYuUToZduN3FRMfnT1k4h5/58umlaWTMD8jXTQ8Rs/fxbiRrFTnE1Eu5iIFsuvvA0r0seKveXniJ+OX3dBNIFNbKLy/0tr2LA/Rkg6jFz0aYCmhsvcHutPIa+h1/X1y8iwZ3QUK3ADpODKxBKjkfY2kC+X696WjLftQgzLQ9KW0IPVwX/IGbMgfn0RaPvIFSKSWVcg8KpfNi82XTu0DEEVxQPfRZAWECMqRT/+/Eh32y272780zmMtamXl8MWSE+Bh5+SYZV2MknZSTIue9A6O40soZ/dGB/yLSb+pInyBe2K4KFZ9K4vm2ks6FiGJcWaWxwe9pFViaIlXTcNpfzUxuSBfkHqQyMSYt+/vv1OSdhXGS5nvKGuDLeBYMRlmTUxa46X3zkp71AJN/ouk=
+  - K8S_NAMESPACE=mamad
+  - K8S_DEPLOYMENT=mamadbot
+  - K8S_SERVICE_ACCOUNT=mamadbot-travis
+  - DOCKER_IMAGE_NAME=rg.fr-par.scw.cloud/mamad/mamadbot
+  - secure: oFQZT1MFPvH7BieK5igQAVKFKs07JKJVcQRq2lze8BYG8WElLtRb+W7OeGyW1Lqo1z8miDd9QmF1kqfPr75EqQ3WmMbPqvoNlPUggMQWzVeD4NTQb/3mLA+lWNsMn13mNUuXsH8ddNNwI2jJRTPLTpFkof+FWd1WYd82gPmI+88HMsgRgGhYfELB42/4GeaZx3Yii2mMtZDs4jleJrWst3pJ188nJzpfa1A9bqCPdeQkrVWnDClotfhuxhS5JQjoX1gy53CXx3g8rtRh0/OphM2qgiYuUToZduN3FRMfnT1k4h5/58umlaWTMD8jXTQ8Rs/fxbiRrFTnE1Eu5iIFsuvvA0r0seKveXniJ+OX3dBNIFNbKLy/0tr2LA/Rkg6jFz0aYCmhsvcHutPIa+h1/X1y8iwZ3QUK3ADpODKxBKjkfY2kC+X696WjLftQgzLQ9KW0IPVwX/IGbMgfn0RaPvIFSKSWVcg8KpfNi82XTu0DEEVxQPfRZAWECMqRT/+/Eh32y272780zmMtamXl8MWSE+Bh5+SYZV2MknZSTIue9A6O40soZ/dGB/yLSb+pInyBe2K4KFZ9K4vm2ks6FiGJcWaWxwe9pFViaIlXTcNpfzUxuSBfkHqQyMSYt+/vv1OSdhXGS5nvKGuDLeBYMRlmTUxa46X3zkp71AJN/ouk=
+  - secure: FlKuBa3iPblXTZg2H2erwPKpE9MrXFxiPLORngbMOTgRjPRjgYC+Nttg9zl+iZ/6hZnDu54cAB7xr86Q1mDmzGxDnqpHVj99fGi7VepIKnlRajz5Pvp30qiwJkzktPvkh2llf/tOWcQvFwm9+D8z67KhJP7XpPdcNXXztKHadfdwgm90WY7m2rGgaNCy3IN93BX60ywYqB9TmS3SccimB5Fh+4Lj9PNDdN4v7yyE9dDr+NCmahm7I3N/K38uE9SpE8oQfZedcWDBYMyN2qXSyKtGlK/aGZ19Inw89lFRGmOeZuexxGcINAaawvummwGHdEfJ0d/qtjj/Jh7J+oF8J39Ej0oOc5Wb9YLcBoBE6k/2BaYfX0i3YdkEWdVa79+iCLII5GNKqSK/9wIJxiF0GEDKgFxssk1kB0i6cB/XdwlpIPSJU2TMNP9STItvKCU/y9wq2m03ctXrIz7qitqBW1dqScyjtLJe0F3xxTZ/IhNlPBhXAooXsnU744Jo1h4XHxAWVtTAgABvR6tliMtP/TZHgQHunvoSozbZfQuMaN/uweMr3kWM8gWUA9OO5Xk/FyfwurzK+6GPRsIUTVIm+mMX4ffMrH+6ZfEjCv9TltaCKNZbeJiOe0VeoSruiyAJLuD5G8pwCy1s87Kgj096bYJOacASa1nfuu84FiyRUjo=
