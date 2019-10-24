@@ -14,19 +14,31 @@ before_install:
 - go get -u github.com/golang/dep/cmd/dep
 - dep ensure -vendor-only
 
-script:
-- dep ensure
-- go build .
+stages:
+  - test
+  - build
+  - name: deploy
+    if: branch = master
 
-after_success:
-- docker login rg.fr-par.scw.cloud/mamad -u nologin -p $SCW_SECRET_TOKEN
-- docker build -t $DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_ID .
-- docker push $DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_ID
-- ./kubectl config set-cluster kubernetes --certificate-authority=k8s/build/ca.crt --server=$K8S_SERVER_URL
-- ./kubectl config set-credentials $K8S_SERVICE_ACCOUNT --token=$K8S_SECRET_TOKEN
-- ./kubectl config set-context target --cluster=kubernetes --namespace=$K8S_NAMESPACE --user=$K8S_SERVICE_ACCOUNT
-- ./kubectl config use-context target --user=$K8S_SERVICE_ACCOUNT
-- ./kubectl set image --namespace=$K8S_NAMESPACE deployment/$K8S_DEPLOYMENT $K8S_DEPLOYMENT=$DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_ID
+jobs:
+  include:
+    - stage: test
+      name: "Test"
+      script: go build .
+    - stage: build
+      name: "Build and push docker image"
+      script:
+        - docker login rg.fr-par.scw.cloud/mamad -u nologin -p $SCW_SECRET_TOKEN
+        - docker build -t $DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_ID .
+        - docker push $DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_ID
+    - stage: deploy
+      name: "Deploy to Kubernetes"
+      script:
+        - ./kubectl config set-cluster kubernetes --certificate-authority=k8s/build/ca.crt --server=$K8S_SERVER_URL
+        - ./kubectl config set-credentials $K8S_SERVICE_ACCOUNT --token=$K8S_SECRET_TOKEN
+        - ./kubectl config set-context target --cluster=kubernetes --namespace=$K8S_NAMESPACE --user=$K8S_SERVICE_ACCOUNT
+        - ./kubectl config use-context target --user=$K8S_SERVICE_ACCOUNT
+        - ./kubectl set image --namespace=$K8S_NAMESPACE deployment/$K8S_DEPLOYMENT $K8S_DEPLOYMENT=$DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_ID
 
 env:
   global:
