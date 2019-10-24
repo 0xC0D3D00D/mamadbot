@@ -24,7 +24,8 @@ after_success:
 - docker push $DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_NUMBER
 - ./kubectl config set-cluster kubernetes --certificate-authority=k8s/build/ca.crt --server=$K8S_SERVER_URL
 - ./kubectl config set-credentials $K8S_SERVICE_ACCOUNT --token=$K8S_SECRET_TOKEN
-- ./kubectl set-context target --cluster=kubernetes --namespace=$K8S_NAMESPACE --user=$K8S_SERVICE_ACCOUNT
+- ./kubectl config set-context target --cluster=kubernetes --namespace=$K8S_NAMESPACE --user=$K8S_SERVICE_ACCOUNT
+- ./kubectl config use-context target --user=$K8S_SERVICE_ACCOUNT
 - ./kubectl set image --namespace=$K8S_NAMESPACE deployment/$K8S_DEPLOYMENT $K8S_DEPLOYMENT=$DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_NUMBER
 
 env:
