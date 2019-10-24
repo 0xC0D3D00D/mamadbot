@@ -5,6 +5,12 @@ go:
 - 1.12.6
 
 before_install:
+- openssl aes-256-cbc -K $encrypted_554bd2fa8bbb_key -iv $encrypted_554bd2fa8bbb_iv -in k8s/build/token.enc -out k8s/build/token -d
+- openssl aes-256-cbc -K $encrypted_554bd2fa8bbb_key -iv $encrypted_554bd2fa8bbb_iv -in k8s/build/ca.crt.enc -out k8s/build/ca.crt -d
+- export K8S_SECRET_TOKEN=$(cat k8s/build/token)
+- curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+- chmod +x ./kubectl
+- ./kubctl version
 - go get -u github.com/golang/dep/cmd/dep
 - dep ensure -vendor-only
 
@@ -14,9 +20,17 @@ script:
 
 after_success: 
 - docker login rg.fr-par.scw.cloud/mamad -u nologin -p $SCW_SECRET_TOKEN
-- docker build -t rg.fr-par.scw.cloud/mamad/mamadbot .
-- docker push rg.fr-par.scw.cloud/mamad/mamadbot
+- docker build -t $DOCKER_IMAGE_NAME .
+- docker push $DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_NUMBER
+- ./kubectl config set-cluster kubernetes --certificate-authority=k8s/build/ca.crt
+- ./kubectl config set-credentials $K8S_SERVICE_ACCOUNT --token=$K8S_SECRET_TOKEN
+- ./kubectl set-context target --cluster=kubernetes --namespace=$K8S_NAMESPACE --user=$K8S_SERVICE_ACCOUNT
+- ./kubectl set image --namespace=$K8S_NAMESPACE deployment/$K8S_DEPLOYMENT $K8S_DEPLOYMENT=$DOCKER_IMAGE_NAME:build-$TRAVIS_BUILD_NUMBER
 
 env:
   global:
-    secure: oFQZT1MFPvH7BieK5igQAVKFKs07JKJVcQRq2lze8BYG8WElLtRb+W7OeGyW1Lqo1z8miDd9QmF1kqfPr75EqQ3WmMbPqvoNlPUggMQWzVeD4NTQb/3mLA+lWNsMn13mNUuXsH8ddNNwI2jJRTPLTpFkof+FWd1WYd82gPmI+88HMsgRgGhYfELB42/4GeaZx3Yii2mMtZDs4jleJrWst3pJ188nJzpfa1A9bqCPdeQkrVWnDClotfhuxhS5JQjoX1gy53CXx3g8rtRh0/OphM2qgiYuUToZduN3FRMfnT1k4h5/58umlaWTMD8jXTQ8Rs/fxbiRrFTnE1Eu5iIFsuvvA0r0seKveXniJ+OX3dBNIFNbKLy/0tr2LA/Rkg6jFz0aYCmhsvcHutPIa+h1/X1y8iwZ3QUK3ADpODKxBKjkfY2kC+X696WjLftQgzLQ9KW0IPVwX/IGbMgfn0RaPvIFSKSWVcg8KpfNi82XTu0DEEVxQPfRZAWECMqRT/+/Eh32y272780zmMtamXl8MWSE+Bh5+SYZV2MknZSTIue9A6O40soZ/dGB/yLSb+pInyBe2K4KFZ9K4vm2ks6FiGJcWaWxwe9pFViaIlXTcNpfzUxuSBfkHqQyMSYt+/vv1OSdhXGS5nvKGuDLeBYMRlmTUxa46X3zkp71AJN/ouk=
+    - K8S_NAMESPACE=mamad
+    - K8S_DEPLOYMENT=mamadbot
+    - K8S_SERVICE_ACCOUNT=mamadbot-travis
+    - DOCKER_IMAGE_NAME=rg.fr-par.scw.cloud/mamad/mamadbot
+    - secure: oFQZT1MFPvH7BieK5igQAVKFKs07JKJVcQRq2lze8BYG8WElLtRb+W7OeGyW1Lqo1z8miDd9QmF1kqfPr75EqQ3WmMbPqvoNlPUggMQWzVeD4NTQb/3mLA+lWNsMn13mNUuXsH8ddNNwI2jJRTPLTpFkof+FWd1WYd82gPmI+88HMsgRgGhYfELB42/4GeaZx3Yii2mMtZDs4jleJrWst3pJ188nJzpfa1A9bqCPdeQkrVWnDClotfhuxhS5JQjoX1gy53CXx3g8rtRh0/OphM2qgiYuUToZduN3FRMfnT1k4h5/58umlaWTMD8jXTQ8Rs/fxbiRrFTnE1Eu5iIFsuvvA0r0seKveXniJ+OX3dBNIFNbKLy/0tr2LA/Rkg6jFz0aYCmhsvcHutPIa+h1/X1y8iwZ3QUK3ADpODKxBKjkfY2kC+X696WjLftQgzLQ9KW0IPVwX/IGbMgfn0RaPvIFSKSWVcg8KpfNi82XTu0DEEVxQPfRZAWECMqRT/+/Eh32y272780zmMtamXl8MWSE+Bh5+SYZV2MknZSTIue9A6O40soZ/dGB/yLSb+pInyBe2K4KFZ9K4vm2ks6FiGJcWaWxwe9pFViaIlXTcNpfzUxuSBfkHqQyMSYt+/vv1OSdhXGS5nvKGuDLeBYMRlmTUxa46X3zkp71AJN/ouk=

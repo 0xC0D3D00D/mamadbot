@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mamadbot
+  namespace: mamad
+  labels:
+    app: mamadbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mamadbot
+  template:
+    metadata:
+      labels:
+        app: mamadbot
+    spec:
+      imagePullSecrets:
+      - name: mamad-docker-images
+      containers:
+      - name: mamadbot
+        image: rg.fr-par.scw.cloud/mamad/mamadbot:latest
+        env:
+          - name: TELEGRAM_BOT_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: mamadbot-api-keys
+                key: telegram-api-key
