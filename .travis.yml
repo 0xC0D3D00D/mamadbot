@@ -1,6 +1,16 @@
 language: go
-
+services:
+- docker
 go:
 - 1.12.6
+script:
+- go build .
 
-script: go build .
+after_success: 
+ - docker login rg.fr-par.scw.cloud/mamad -u nologin -p $SCW_SECRET_TOKEN
+ - docker build -t rg.fr-par.scw.cloud/mamad/mamadbot .
+ - docker push rg.fr-par.scw.cloud/mamad/mamadbot
+
+env:
+  global:
+    secure: oFQZT1MFPvH7BieK5igQAVKFKs07JKJVcQRq2lze8BYG8WElLtRb+W7OeGyW1Lqo1z8miDd9QmF1kqfPr75EqQ3WmMbPqvoNlPUggMQWzVeD4NTQb/3mLA+lWNsMn13mNUuXsH8ddNNwI2jJRTPLTpFkof+FWd1WYd82gPmI+88HMsgRgGhYfELB42/4GeaZx3Yii2mMtZDs4jleJrWst3pJ188nJzpfa1A9bqCPdeQkrVWnDClotfhuxhS5JQjoX1gy53CXx3g8rtRh0/OphM2qgiYuUToZduN3FRMfnT1k4h5/58umlaWTMD8jXTQ8Rs/fxbiRrFTnE1Eu5iIFsuvvA0r0seKveXniJ+OX3dBNIFNbKLy/0tr2LA/Rkg6jFz0aYCmhsvcHutPIa+h1/X1y8iwZ3QUK3ADpODKxBKjkfY2kC+X696WjLftQgzLQ9KW0IPVwX/IGbMgfn0RaPvIFSKSWVcg8KpfNi82XTu0DEEVxQPfRZAWECMqRT/+/Eh32y272780zmMtamXl8MWSE+Bh5+SYZV2MknZSTIue9A6O40soZ/dGB/yLSb+pInyBe2K4KFZ9K4vm2ks6FiGJcWaWxwe9pFViaIlXTcNpfzUxuSBfkHqQyMSYt+/vv1OSdhXGS5nvKGuDLeBYMRlmTUxa46X3zkp71AJN/ouk=
